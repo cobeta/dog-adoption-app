@@ -20,36 +20,6 @@ connectToDb((err) => {
 });
 
 // routes
-app.get('/dogs', (req, res) => {
-  // current page
-  const page = req.query.p || 0
-  const dogsPerPage = 3
+app.use('/dogs', require('./routes/dogs'))
 
-  let dogs = []
-
-  db.collection('dogs')
-    .find()
-    .sort({author: 1})
-    .skip(page * dogsPerPage)
-    .limit(dogsPerPage)
-    .forEach(dog => dogs.push(dog))
-    .then(() => {
-      res.status(200).json(dogs)
-    })
-    .catch(() => {
-      res.status(500).json({error: 'Could not fetch the documents'})
-    })
-})
-
-app.post('/dogs', (req, res) => {
-  const dog = req.body
-
-  db.collection('dogs')
-    .insertOne(dog)
-    .then(result => {
-      res.status(201).json(result)
-    })
-    .catch(err => {
-      res.status(500).json({err: 'Could not create add dog'})
-    })
-})
+app.use('/auth', require('./routes/authRoutes'))
