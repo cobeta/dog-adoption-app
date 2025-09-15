@@ -4,7 +4,6 @@ require('dotenv').config();
 
 // handle errors
 const handleErrors = (err) => {
-  console.log(err.message, err.code);
   let errors = { email: '', password: '' };
 
   // incorrect email
@@ -50,7 +49,7 @@ module.exports.signup_post = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    console.log(req.body)
+    console.log('Signup post req.body:', req.body);
     const user = await User.create({ email, password });
     const token = createToken(user._id);
     res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 });

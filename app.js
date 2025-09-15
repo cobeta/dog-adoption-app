@@ -1,25 +1,34 @@
-const express = require('express')
-const { getDb, connectToDb } = require('./db')
-const { ObjectId } = require('mongodb')
+// app.js
+require('dotenv').config();
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const { connectDB } = require('./db');
 
-// init app & middleware
-const app = express()
-app.use(express.json())
+const app = express();
 
-// db connection
-let db
+// Middleware
+app.use(cookieParser());
+app.use(express.json());
 
-connectToDb((err) => {
-  if(!err){
-    app.listen('3000', () => {
-      console.log('app listening on port 3000');
+// Routes
+const dogsRoutes = require('./routes/dogs');
+const authRoutes = require('./routes/authRoutes');
+
+(async () => {
+  try {
+    const MONGODB_URI = process.env.MONGODB_URI;
+
+    await connectDB(MONGODB_URI);
+
+    app.use('/dogs', dogsRoutes);
+    app.use('/auth', authRoutes);
+
+    const PORT = process.env.PORT;
+    app.listen(PORT, () => {
+      console.log(`🚀 App listening on http://localhost:${PORT}`);
     });
-    db = getDb();
-    console.log('connected to database');
+  } catch (err) {
+    console.error('❌ Failed to start app:', err);
+    process.exit(1);
   }
-});
-
-// routes
-app.use('/dogs', require('./routes/dogs'))
-
-app.use('/auth', require('./routes/authRoutes'))
+})();
