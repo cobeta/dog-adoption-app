@@ -1,6 +1,6 @@
 const express = require('express');
 const Dog = require('../models/Dogs'); 
-const { requireAuth } = require('../middlewares/authMiddleware');
+const { requireAuth, checkUser } = require('../middlewares/authMiddleware');
 const router = express.Router();
 
 /**
@@ -55,13 +55,14 @@ router.post('/register', requireAuth, async (req, res) => {
   }
 });
 
+
 /**
- * PATCH /dogs/:id
+ * PATCH /dogs/:id/adopt
  * users can adopt a dog by its ID, including a thank-you message for the original owner. 
  * Restrictions apply: 
  * only adopt if status is available, and users cannot adopt dogs they registered.
  */
-router.patch('/:id', requireAuth, async (req, res) => {
+router.patch('/:id/adopt', requireAuth, async (req, res) => {
   try {
     const dogId = req.params.id;
     const {  thankYouMessage } = req.body;
@@ -75,7 +76,11 @@ router.patch('/:id', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Dog is not available for adoption' });
     }
 
-    const currentUserId = req.user._id;
+    console.log('Authenticated user:', res.locals);
+    //const currentUserId = req.user._id;
+    const currentUserId = "" + res.locals.user._id; // Ensure it's a string for comparison
+    console.log('Current User ID:', currentUserId);
+    console.log('Dog Registered By:', dog.registered_by.toString());
 
     if (dog.registered_by.toString() === currentUserId.toString()) {
       return res.status(400).json({ error: 'You cannot adopt a dog you registered' });

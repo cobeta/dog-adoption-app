@@ -2,6 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const { checkUser } = require('./middlewares/authMiddleware');
 const { connectDB } = require('./db');
 
 const app = express();
@@ -9,6 +10,7 @@ const app = express();
 // Middleware
 app.use(cookieParser());
 app.use(express.json());
+app.use(checkUser);
 
 // Routes
 const dogsRoutes = require('./routes/dogs');
