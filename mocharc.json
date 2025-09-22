@@ -1,0 +1,12 @@
+{
+  "spec": ["test/**/*.test.js"],
+  "extension": ["js", "cjs"],
+  "reporter": "spec",
+  "timeout": 2000,
+  "slow": 75,
+  "ui": "bdd",
+  "recursive": true,
+  "diff": true,
+  "watch-files": ["lib/**/*.js", "test/**/*.js"],
+  "watch-ignore": ["lib/vendor"]
+}

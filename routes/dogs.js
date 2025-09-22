@@ -1,12 +1,14 @@
 const express = require('express');
 const Dog = require('../models/Dogs'); 
-const { requireAuth, checkUser } = require('../middlewares/authMiddleware');
+const { requireAuth } = require('../middlewares/authMiddleware');
 const router = express.Router();
 
 /**
  * GET /dogs?p=0
+ * This endpoint is not required in the exercise, it lists all dogs in the system
  * (3 dogs per page)
  */
+
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.p, 10) || 0;
@@ -38,9 +40,13 @@ router.get('/', async (req, res) => {
  * POST /dogs
  * Create a new dog
  */
-router.post('/register', requireAuth, async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
-    const dog = await Dog.create(req.body);
+    const dogData = {
+      ...req.body,
+      registered_by: res.locals.user._id
+    };
+    const dog = await Dog.create(dogData);
     res.status(201).json(dog);
   } catch (err) {
     console.error(err);
@@ -54,7 +60,6 @@ router.post('/register', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Could not create dog' });
   }
 });
-
 
 /**
  * PATCH /dogs/:id/adopt
@@ -76,12 +81,7 @@ router.patch('/:id/adopt', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Dog is not available for adoption' });
     }
 
-    console.log('Authenticated user:', res.locals);
-    //const currentUserId = req.user._id;
-    const currentUserId = "" + res.locals.user._id; // Ensure it's a string for comparison
-    console.log('Current User ID:', currentUserId);
-    console.log('Dog Registered By:', dog.registered_by.toString());
-
+    const currentUserId = "" + res.locals.user._id; 
     if (dog.registered_by.toString() === currentUserId.toString()) {
       return res.status(400).json({ error: 'You cannot adopt a dog you registered' });
     }
@@ -97,6 +97,38 @@ router.patch('/:id/adopt', requireAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error adopting dog' });
+  }
+});
+
+/**
+ * PATCH /dogs/:id/remove
+ * Owners can remove their registered dogs from the platform unless the dog has been adopted. Users cannot remove dogs registered by others.
+ */
+router.patch('/:id/remove', requireAuth, async (req, res) => {
+  try {
+    const dogId = req.params.id;
+
+    const dog = await Dog.findById(dogId);
+    if (!dog) {
+      return res.status(404).json({ error: 'Dog not found' });
+    }
+
+    const currentUserId = "" + res.locals.user._id;
+
+    if (dog.registered_by.toString() !== currentUserId.toString()) {
+      return res.status(403).json({ error: 'You can only remove dogs you registered' });
+    }
+
+    dog.status = 'removed';
+    dog.removed_at = new Date();
+
+    await dog.save();
+
+    res.json(dog);
+    
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error removing dog' });
   }
 });
 

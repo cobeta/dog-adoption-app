@@ -1,5 +1,12 @@
 // app.js
-require('dotenv').config();
+// Read environment variables from .env file
+const path = require('path');
+const env = process.env.NODE_ENV || 'development';
+
+// Use .env for production by default; .env.development / .env.test otherwise
+const dotenvPath = env === 'production' ? '.env' : `.env.${env}`;
+require('dotenv').config({ path: path.resolve(process.cwd(), dotenvPath) });
+
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const { checkUser } = require('./middlewares/authMiddleware');
@@ -14,23 +21,12 @@ app.use(checkUser);
 
 // Routes
 const dogsRoutes = require('./routes/dogs');
+const userRoutes = require('./routes/users');
 const authRoutes = require('./routes/authRoutes');
+app.use('/dogs', dogsRoutes);
+app.use('/users', userRoutes);
+app.use('/auth', authRoutes);
 
-(async () => {
-  try {
-    const MONGODB_URI = process.env.MONGODB_URI;
+module.exports = app;
 
-    await connectDB(MONGODB_URI);
 
-    app.use('/dogs', dogsRoutes);
-    app.use('/auth', authRoutes);
-
-    const PORT = process.env.PORT;
-    app.listen(PORT, () => {
-      console.log(`🚀 App listening on http://localhost:${PORT}`);
-    });
-  } catch (err) {
-    console.error('❌ Failed to start app:', err);
-    process.exit(1);
-  }
-})();
